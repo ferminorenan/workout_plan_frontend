@@ -1,5 +1,5 @@
 
-import { WorkoutPlan, Phase, WeeklyPlan, DailyWorkout, Exercise } from '../domain/workout/Workout';
+import { WorkoutPlan, Phase, WeeklyPlan, Exercise } from '../domain/workout/Workout';
 import { v4 as uuidv4 } from 'uuid'; // Assuming uuid is installed or will be installed
 
 // Helper function to create exercises with unique IDs

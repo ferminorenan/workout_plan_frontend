@@ -1,4 +1,4 @@
-import { Checkbox, ListItem, ListItemText } from "@mui/material";
+import { Checkbox, ListItem, Typography, Box } from "@mui/material";
 import { Exercise } from "../domain/workout/Workout";
 
 interface ExerciseItemProps {
@@ -17,14 +17,42 @@ const ExerciseItem: React.FC<ExerciseItemProps> = ({ exercise, isCompleted, onTo
                     onChange={() => onToggle(exercise.id)}
                     checked={isCompleted}
                     aria-label={`Marcar ${exercise.nome} como concluído`}
+                    sx={{
+                        '& .MuiSvgIcon-root': {
+                            fontSize: { xs: '1.2rem', sm: '1.4rem' }
+                        }
+                    }}
                 />
             }
             disablePadding
-            className={isCompleted ? 'exercise-completed' : ''}
+            sx={{
+                py: 0.5,
+                opacity: isCompleted ? 0.7 : 1,
+                textDecoration: isCompleted ? 'line-through' : 'none'
+            }}
         >
-            <ListItemText primary={`${exercise.nome} - ${exercise.repeticoes}`} />
+            <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                <Typography
+                    variant="body1"
+                    sx={{
+                        fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                        fontWeight: 500
+                    }}
+                >
+                    {exercise.nome}
+                </Typography>
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                        fontSize: { xs: '0.75rem', sm: '0.85rem' }
+                    }}
+                >
+                    {exercise.repeticoes}
+                </Typography>
+            </Box>
         </ListItem>
     );
 };
 
-export default ExerciseItem
+export default ExerciseItem;
