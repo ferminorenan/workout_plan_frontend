@@ -4,6 +4,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { WorkoutPage } from '../pages/WorkoutPage';
 import { useAuth } from '../contexts/AuthContext';
+import WorkoutOfTheDay from '../pages/WorkoutOfTheDay';
 
 // Componente para rotas protegidas que requerem autenticação
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -39,7 +40,13 @@ export const AppRoutes: React.FC = () => {
                     </ProtectedRoute>
                 }
             />
-
+            <Route
+                path="/workout-of-the-day"
+                element={
+                    <ProtectedRoute>
+                        <WorkoutOfTheDay />
+                    </ProtectedRoute>}
+            />
             {/* Redirecionar a raiz para a página de workout */}
             <Route path="/" element={<Navigate to="/workout" replace />} />
 

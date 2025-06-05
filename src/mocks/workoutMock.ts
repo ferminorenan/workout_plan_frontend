@@ -62,7 +62,7 @@ const phase1_week1_4: WeeklyPlan = {
     ],
 };
 
-const phase1: Phase = {
+export const phase1: Phase = {
     id: phase1Id,
     title: 'Fase 1: Adaptação',
     objective: 'Criar rotina, ativar o corpo e começar o déficit calórico.',

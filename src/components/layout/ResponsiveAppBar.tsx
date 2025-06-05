@@ -30,7 +30,7 @@ import { useAuth } from '../../contexts/AuthContext';
 // Definindo os itens do menu
 const menuItems = [
     { text: 'Treinos', icon: <FitnessCenterIcon />, path: '/workout' },
-    { text: 'Calendário', icon: <CalendarMonthIcon />, path: '/calendar' },
+    { text: 'Calendário', icon: <CalendarMonthIcon />, path: '/workout-of-the-day' },
 ];
 
 interface ResponsiveAppBarProps {
