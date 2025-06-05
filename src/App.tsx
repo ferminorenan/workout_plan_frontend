@@ -1,5 +1,5 @@
 import React from 'react';
-import WorkoutPage from './pages/WorkoutPage';
+import { WorkoutPage } from './pages/WorkoutPage';
 
 function App() {
   return <WorkoutPage />;
