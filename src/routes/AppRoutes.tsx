@@ -1,27 +1,38 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { LoginPage } from '../pages/LoginPage';
-import { RegisterPage } from '../pages/RegisterPage';
+import LoginPage from '../pages/LoginPage';
+import RegisterPage from '../pages/RegisterPage';
 import { WorkoutPage } from '../pages/WorkoutPage';
-import { useAuth } from '../contexts/AuthContext';
 import WorkoutOfTheDay from '../pages/WorkoutOfTheDay';
+import EditProfilePage from '../pages/EditProfilePage';
+import WorkoutPlanCreatePage from '../pages/WorkoutPlanCreatePage';
+import { useAuth } from '../contexts/AuthContext';
+import ProfilePage from 'pages/ProfilePage';
+import { MainLayout } from 'components/layout/MainLayout';
+import { Box, CircularProgress } from '@mui/material';
 
-// Componente para rotas protegidas que requerem autenticação
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
+interface ProtectedRouteProps {
+    children: React.ReactNode;
+    title: string;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, title }) => {
     const { isAuthenticated, loading } = useAuth();
 
-    // Se ainda estiver carregando, não redireciona
     if (loading) {
-        return null;
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
-    // Se não estiver autenticado, redireciona para o login
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
 
-    // Se estiver autenticado, renderiza o conteúdo da rota
-    return <>{children}</>;
+    return <MainLayout title={title}>{children}</MainLayout>;
 };
 
 export const AppRoutes: React.FC = () => {
@@ -35,24 +46,49 @@ export const AppRoutes: React.FC = () => {
             <Route
                 path="/workout"
                 element={
-                    <ProtectedRoute>
+                    <ProtectedRoute title="Plano de Treino">
                         <WorkoutPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/workout/create"
+                element={
+                    <ProtectedRoute title="Criar Plano de Treino">
+                        <WorkoutPlanCreatePage />
                     </ProtectedRoute>
                 }
             />
             <Route
                 path="/workout-of-the-day"
                 element={
-                    <ProtectedRoute>
+                    <ProtectedRoute title="Treino do dia">
                         <WorkoutOfTheDay />
-                    </ProtectedRoute>}
+                    </ProtectedRoute>
+                }
             />
-            {/* Redirecionar a raiz para a página de workout */}
+            <Route
+                path="/profile"
+                element={
+                    <ProtectedRoute title="Perfil">
+                        <ProfilePage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/profile/edit"
+                element={
+                    <ProtectedRoute title="Editar Perfil">
+                        <EditProfilePage />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Redirecionamento da raiz */}
             <Route path="/" element={<Navigate to="/workout" replace />} />
 
-            {/* Rota para qualquer caminho não encontrado */}
+            {/* Catch-all para rotas inexistentes */}
             <Route path="*" element={<Navigate to="/workout" replace />} />
         </Routes>
     );
 };
-

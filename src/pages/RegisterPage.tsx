@@ -8,56 +8,61 @@ import {
     Paper,
     Link,
     CircularProgress,
-    Alert
+    Alert,
+    InputAdornment,
+    IconButton
 } from '@mui/material';
-import { Link as RouterLink, useNavigate } from 'react-router';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 
-// Esquema de validação para o formulário de registro
+// Esquema de validação
 const validationSchema = yup.object({
-    name: yup
-        .string()
-        .required('Nome é obrigatório'),
-    email: yup
-        .string()
-        .email('Digite um email válido')
-        .required('Email é obrigatório'),
-    password: yup
-        .string()
-        .min(6, 'A senha deve ter pelo menos 6 caracteres')
-        .required('Senha é obrigatória'),
-    confirmPassword: yup
+    email: yup.string().email('Digite um email válido').required('Email é obrigatório'),
+    password: yup.string().min(6, 'A senha deve ter pelo menos 6 caracteres').required('Senha é obrigatória'),
+    password_confirm: yup
         .string()
         .oneOf([yup.ref('password')], 'As senhas não coincidem')
         .required('Confirmação de senha é obrigatória'),
 });
 
-export const RegisterPage: React.FC = () => {
-    const { register } = useAuth();
+const RegisterPage: React.FC = () => {
+    const { register, login } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
+    const handleTogglePassword = () => setShowPassword(!showPassword);
+    const handleTogglePasswordConfirm = () => setShowPasswordConfirm(!showPasswordConfirm);
 
     const formik = useFormik({
         initialValues: {
-            name: '',
             email: '',
             password: '',
-            confirmPassword: '',
+            password_confirm: '',
         },
         validationSchema: validationSchema,
         onSubmit: async (values) => {
-            try {
-                const success = await register(values.name, values.email, values.password);
+            const response = await register(
+                values.email,
+                values.password,
+                values.password_confirm
+            );
+
+            if (response === true) {
+                const success = await login(values.email, values.password);
                 if (success) {
-                    navigate('/workout');
-                } else {
-                    setError('Falha no registro. Tente novamente.');
+                    navigate('/profile/edit');
                 }
-            } catch (err) {
-                setError('Ocorreu um erro durante o registro. Tente novamente.');
-                console.error('Erro de registro:', err);
+            } else {
+                const mensagemErro = response.includes('custom user com este E-mail já existe.')
+                    ? 'Usuário já cadastrado'
+                    : response;
+
+                setError(mensagemErro);
             }
         },
     });
@@ -88,20 +93,6 @@ export const RegisterPage: React.FC = () => {
                     <TextField
                         margin="normal"
                         fullWidth
-                        id="name"
-                        label="Nome completo"
-                        name="name"
-                        autoComplete="name"
-                        autoFocus
-                        value={formik.values.name}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.name && Boolean(formik.errors.name)}
-                        helperText={formik.touched.name && formik.errors.name}
-                    />
-                    <TextField
-                        margin="normal"
-                        fullWidth
                         id="email"
                         label="Email"
                         name="email"
@@ -117,7 +108,7 @@ export const RegisterPage: React.FC = () => {
                         fullWidth
                         name="password"
                         label="Senha"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         id="password"
                         autoComplete="new-password"
                         value={formik.values.password}
@@ -125,20 +116,38 @@ export const RegisterPage: React.FC = () => {
                         onBlur={formik.handleBlur}
                         error={formik.touched.password && Boolean(formik.errors.password)}
                         helperText={formik.touched.password && formik.errors.password}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton onClick={handleTogglePassword} edge="end">
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            )
+                        }}
                     />
                     <TextField
                         margin="normal"
                         fullWidth
-                        name="confirmPassword"
+                        name="password_confirm"
                         label="Confirmar senha"
-                        type="password"
-                        id="confirmPassword"
+                        type={showPasswordConfirm ? 'text' : 'password'}
+                        id="password_confirm"
                         autoComplete="new-password"
-                        value={formik.values.confirmPassword}
+                        value={formik.values.password_confirm}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-                        helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
+                        error={formik.touched.password_confirm && Boolean(formik.errors.password_confirm)}
+                        helperText={formik.touched.password_confirm && formik.errors.password_confirm}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton onClick={handleTogglePasswordConfirm} edge="end">
+                                        {showPasswordConfirm ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            )
+                        }}
                     />
                     <Button
                         type="submit"
@@ -160,3 +169,4 @@ export const RegisterPage: React.FC = () => {
     );
 };
 
+export default RegisterPage;

@@ -27,7 +27,7 @@ const validationSchema = yup.object({
         .required('Senha é obrigatória'),
 });
 
-export const LoginPage: React.FC = () => {
+const LoginPage: React.FC = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
     const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export const LoginPage: React.FC = () => {
                 if (success) {
                     navigate('/workout');
                 } else {
-                    setError('Falha no login. Verifique suas credenciais.');
+                    setError('Credenciais inválidas. Verifique seu email e senha.');
                 }
             } catch (err) {
                 setError('Ocorreu um erro durante o login. Tente novamente.');
@@ -124,3 +124,4 @@ export const LoginPage: React.FC = () => {
     );
 };
 
+export default LoginPage;

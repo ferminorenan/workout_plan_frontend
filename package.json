@@ -23,6 +23,7 @@
     "react-router-dom": "^7.6.2",
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
+    "util": "^0.12.5",
     "uuid": "^11.1.0",
     "web-vitals": "^2.1.4",
     "yup": "^1.6.1"
@@ -52,6 +53,13 @@
     ]
   },
   "devDependencies": {
-    "@types/react-calendar": "^3.9.0"
+    "@babel/preset-env": "^7.27.2",
+    "@babel/preset-react": "^7.27.1",
+    "@babel/preset-typescript": "^7.27.1",
+    "@types/react-calendar": "^3.9.0",
+    "@types/react-router-dom": "^5.3.3",
+    "babel-jest": "^30.0.0-beta.3",
+    "ts-jest": "^29.3.4",
+    "ts-node": "^10.9.2"
   }
 }

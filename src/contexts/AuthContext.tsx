@@ -1,92 +1,104 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, {
+    createContext,
+    useState,
+    useContext,
+    useEffect,
+} from 'react';
+import AuthService from '../services/AuthService';
+import { AuthContextType, AuthProviderProps, User } from 'domain/auth/AuthContext';
 
-// Definindo o tipo para o usuário
-interface User {
-    id: string;
-    name: string;
-    email: string;
-}
 
-// Definindo o tipo para o contexto de autenticação
-interface AuthContextType {
-    user: User | null;
-    isAuthenticated: boolean;
-    loading: boolean;
-    login: (email: string, password: string) => Promise<boolean>;
-    register: (name: string, email: string, password: string) => Promise<boolean>;
-    logout: () => void;
-}
+// =======================
+// Constantes e Contexto
+// =======================
 
-// Criando o contexto com um valor padrão
-const AuthContext = createContext<AuthContextType>({
+const DEFAULT_AUTH_CONTEXT: AuthContextType = {
     user: null,
     isAuthenticated: false,
     loading: true,
     login: async () => false,
-    register: async () => false,
+    register: async () => 'Função de registro não implementada',
     logout: () => { },
-});
+};
 
-// Hook personalizado para usar o contexto de autenticação
+const AuthContext = createContext<AuthContextType>(DEFAULT_AUTH_CONTEXT);
+
+// Hook personalizado para acessar o contexto de autenticação
 export const useAuth = () => useContext(AuthContext);
 
-// Provedor do contexto de autenticação
-interface AuthProviderProps {
-    children: ReactNode;
-}
+// =======================
+// Provider de Autenticação
+// =======================
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Verificar se o usuário está autenticado ao carregar a página
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                // Verificar se há um token no localStorage
-                const token = localStorage.getItem('token');
+    // ===================
+    // Funções auxiliares
+    // ===================
 
-                if (token) {
-                    // Aqui você faria uma chamada para o backend para validar o token
-                    // Por enquanto, vamos apenas simular um usuário autenticado
-                    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                    setUser(userData);
-                }
-            } catch (error) {
-                console.error('Erro ao verificar autenticação:', error);
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-            } finally {
-                setLoading(false);
+    /**
+     * Remove todos os dados de autenticação do localStorage e limpa o estado.
+     */
+    const clearAuthData = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        setUser(null);
+    };
+
+    /**
+     * Carrega os dados do usuário autenticado, caso haja token válido.
+     */
+    const loadUserProfile = async () => {
+        try {
+            const userData = await AuthService.getProfile();
+            setUser(userData);
+        } catch (error: any) {
+            console.error('Erro ao carregar perfil:', error);
+            if (error?.response?.status === 401) {
+                clearAuthData();
             }
-        };
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        checkAuth();
+    // ===================
+    // Efeito de verificação inicial
+    // ===================
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+
+        if (token) {
+            loadUserProfile();
+        } else {
+            setLoading(false);
+        }
     }, []);
 
-    // Função para fazer login
-    const login = async (email: string, password: string): Promise<boolean> => {
+    // ===================
+    // Funções principais
+    // ===================
+
+    /**
+     * Realiza login do usuário e carrega os dados no contexto.
+     */
+    const login = async (
+        email: string,
+        password: string
+    ): Promise<boolean> => {
         try {
             setLoading(true);
 
-            // Aqui você faria uma chamada para o backend para autenticar o usuário
-            // Por enquanto, vamos apenas simular um login bem-sucedido
+            const { access, refresh } = await AuthService.login({ email, password });
 
-            // Simulando uma chamada de API
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            localStorage.setItem('token', access);
+            localStorage.setItem('refreshToken', refresh);
 
-            // Simulando um usuário autenticado
-            const mockUser = {
-                id: '1',
-                name: 'Usuário Teste',
-                email: email
-            };
-
-            // Armazenando o token e os dados do usuário no localStorage
-            localStorage.setItem('token', 'mock-jwt-token');
-            localStorage.setItem('user', JSON.stringify(mockUser));
-
-            setUser(mockUser);
+            await loadUserProfile();
             return true;
         } catch (error) {
             console.error('Erro ao fazer login:', error);
@@ -96,58 +108,72 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
-    // Função para registrar um novo usuário
-    const register = async (name: string, email: string, password: string): Promise<boolean> => {
+    /**
+     * Realiza o registro do usuário e salva dados no contexto.
+     */
+    const register = async (
+        email: string,
+        password: string,
+        passwordConfirm: string
+    ): Promise<true | string> => {
         try {
             setLoading(true);
-
-            // Aqui você faria uma chamada para o backend para registrar o usuário
-            // Por enquanto, vamos apenas simular um registro bem-sucedido
-
-            // Simulando uma chamada de API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Simulando um usuário registrado
-            const mockUser = {
-                id: '1',
-                name: name,
-                email: email
-            };
-
-            // Armazenando o token e os dados do usuário no localStorage
-            localStorage.setItem('token', 'mock-jwt-token');
-            localStorage.setItem('user', JSON.stringify(mockUser));
-
-            setUser(mockUser);
+            const response = await AuthService.register({
+                email,
+                password,
+                password_confirm: passwordConfirm,
+            });
             return true;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro ao registrar usuário:', error);
-            return false;
+
+            // Tenta capturar a mensagem de erro da resposta da API
+            if (error.response && error.response.data) {
+                // Pode ser um objeto com mensagens específicas
+                if (typeof error.response.data === 'string') {
+                    return error.response.data;
+                }
+
+                if (error.response.data.message) {
+                    return error.response.data.message;
+                }
+
+                // Se for um objeto com múltiplos erros
+                const errors = Object.values(error.response.data).flat();
+                if (errors.length > 0) {
+                    return errors[0] as string;
+                }
+            }
+
+            return 'Erro inesperado durante o registro';
         } finally {
             setLoading(false);
         }
     };
 
-    // Função para fazer logout
+    /**
+     * Realiza o logout do usuário e limpa o contexto.
+     */
     const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
+        clearAuthData();
     };
+
+    // ===================
+    // Provedor do Contexto
+    // ===================
 
     return (
         <AuthContext.Provider
             value={{
                 user,
-                isAuthenticated: !!user,
+                isAuthenticated: Boolean(user),
                 loading,
                 login,
                 register,
-                logout
+                logout,
             }}
         >
             {children}
         </AuthContext.Provider>
     );
 };
-
